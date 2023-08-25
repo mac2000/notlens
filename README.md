@@ -147,3 +147,5 @@ stern -n argocd .
 ```
 
 It will print logs from all pods in namespace similar to how it done by docker compose so worth mentioning
+
+Name disclaimer: this tool was not pretending to be a Lens competitor it was more about having fun, Lens is real product, thats why it was renamed to notlens 🤷‍♂️
