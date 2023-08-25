@@ -138,3 +138,12 @@ alias lens='(sleep 1; open http://localhost:8001/static/index.html &); kubectl p
 ```
 
 Or you can do something more cool like [this](https://www.reddit.com/r/kubernetes/comments/160r9po/comment/jxowaxp/?utm_source=share&utm_medium=web2x&context=3)
+
+Also pointed out to an alternative [stern](https://github.com/stern/stern)
+
+```bash
+brew install stern
+stern -n argocd .
+```
+
+It will print logs from all pods in namespace similar to how it done by docker compose so worth mentioning
