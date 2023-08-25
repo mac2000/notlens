@@ -8,6 +8,14 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
+      html {
+        font: normal 18px/1.4 sans-serif;
+      }
+
+      input {
+        font: inherit;
+      }
+
       fieldset > label {
         display: block;
       }
@@ -18,13 +26,41 @@
       }
 
       .logs div {
-        color: #ccc;
         white-space: pre;
       }
 
       .logs b {
-        color: black;
         font-weight: normal;
+      }
+
+      @media (prefers-color-scheme: light) {
+        html {
+          background-color: white;
+          color: black;
+        }
+
+        .logs div {
+          color: #ccc;
+        }
+
+        .logs b {
+          color: black;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        html {
+          background: #282c34;
+          color: #abb2bf;
+        }
+
+        .logs div {
+          color: #999;
+        }
+
+        .logs b {
+          color: white;
+        }
       }
     </style>
   </head>
