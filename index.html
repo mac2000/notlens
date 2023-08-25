@@ -8,6 +8,12 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
+      html,
+      body {
+        padding: 0;
+        margin: 0;
+      }
+
       html {
         font: normal 18px/1.4 sans-serif;
       }
@@ -195,7 +201,7 @@
 
         return (
           <main>
-            <table width="100%">
+            <table width="100%" height="100%">
               <tbody>
                 <tr>
                   <td valign="top" nowrap="true">
@@ -203,16 +209,18 @@
                       <legend>filter</legend>
                       <input type="text" placeholder="name..." value={filter} onChange={(e) => setFilter(e.target.value)} />
                     </fieldset>
-                    {namespaces.map((namespace) => (
-                      <fieldset key={namespace}>
-                        <legend>{namespace}</legend>
-                        {filteredPods(namespace).map((pod) => (
-                          <label key={pod.uid}>
-                            <input type="checkbox" checked={pod.checked} data-uid={pod.uid} onChange={handlePodSelection} /> {pod.name}
-                          </label>
-                        ))}
-                      </fieldset>
-                    ))}
+                    {namespaces
+                      .filter((namespace) => filteredPods(namespace).length)
+                      .map((namespace) => (
+                        <fieldset key={namespace}>
+                          <legend>{namespace}</legend>
+                          {filteredPods(namespace).map((pod) => (
+                            <label key={pod.uid}>
+                              <input type="checkbox" checked={pod.checked} data-uid={pod.uid} onChange={handlePodSelection} /> {pod.name}
+                            </label>
+                          ))}
+                        </fieldset>
+                      ))}
                   </td>
                   <td valign="top" width="99%">
                     {selected.map((pod) => (
