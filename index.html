@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>lens</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      fieldset > label {
+        display: block;
+      }
+
+      .logs {
+        max-height: 10em;
+        overflow: auto;
+      }
+
+      .logs div {
+        color: #ccc;
+        white-space: pre;
+      }
+
+      .logs b {
+        color: black;
+        font-weight: normal;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      async function ndlines(response, cb) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let result = await reader.read();
+        let buffer = "";
+        while (!result.done) {
+          buffer += decoder.decode(result.value);
+          let idx = buffer.indexOf("\n");
+          while (idx !== -1) {
+            const line = buffer.substring(0, idx);
+            cb(line);
+            buffer = buffer.substring(idx + 1);
+            idx = buffer.indexOf("\n");
+          }
+          result = await reader.read();
+        }
+      }
+
+      async function ndjson(response, cb) {
+        return await ndlines(response, (line) => {
+          try {
+            cb(JSON.parse(line));
+          } catch (error) {
+            console.warn(line);
+          }
+        });
+      }
+
+      function highlight(line) {
+        return line
+          .replace(/^(.+\s+msg="([^"]+)".*)$/g, "<b>$2</b> $1")
+          .replace(/^(.+"[mM]essage":\s*"([^"]+)".+)$/g, "<b>$2</b> $1")
+          .replace(/^(.+"msg":"([^"]+)".+)$/g, "<b>$2</b> $1")
+          .replace(/^([WEI]\d{4}\s+\d{2}:\d{2}:\d{2}\.\d+\s+\d+\s+[^:]+:\d+\]) (.+)$/g, "<b>$2</b> $1 $2");
+      }
+    </script>
+    <script type="text/babel">
+      class Logs extends React.Component {
+        constructor(props) {
+          super(props);
+          this.el = React.createRef();
+          this.state = {
+            logs: [],
+          };
+          this.abortController = new AbortController();
+        }
+        componentDidMount() {
+          fetch(`/api/v1/namespaces/${this.props.namespace}/pods/${this.props.name}/log?watch=true&follow=true&tailLines=100`, { signal: this.abortController.signal })
+            .then((res) => {
+              ndlines(res, (line) => {
+                this.setState({
+                  ...this.state,
+                  logs: [...this.state.logs, line],
+                });
+              });
+            })
+            .catch(() => {});
+        }
+        componentWillUnmount() {
+          if (this.abortController) {
+            this.abortController.abort();
+          }
+        }
+        componentDidUpdate() {
+          this.el.current.scrollTop = this.el.current.scrollHeight;
+        }
+        render() {
+          return (
+            <fieldset className="logs" ref={this.el}>
+              <legend>{this.props.name}</legend>
+              {this.state.logs.map((line, idx) => (
+                <div key={idx} dangerouslySetInnerHTML={{ __html: highlight(line) }} />
+              ))}
+            </fieldset>
+          );
+        }
+      }
+
+      function Lens() {
+        const [filter, setFilter] = React.useState("");
+        const [pods, setPods] = React.useState([]);
+        React.useEffect(() => {
+          fetch("/api/v1/pods?watch=true")
+            .then((res) =>
+              ndjson(res, (event) => {
+                const type = event.type;
+                const namespace = event.object.metadata.namespace;
+                const name = event.object.metadata.name;
+                const uid = event.object.metadata.uid;
+                const checked = false;
+                const controller = new AbortController();
+                if (type === "ADDED") {
+                  setPods((pods) => [...pods, { uid, namespace, name, checked, controller }]);
+                } else if (event.type === "DELETED") {
+                  setPods((pods) =>
+                    pods.filter((pod) => {
+                      if (pod.uid !== uid) {
+                        return true;
+                      } else {
+                        if (pod.controller) {
+                          pod.controller.abort();
+                        }
+                        return false;
+                      }
+                    })
+                  );
+                }
+              })
+            )
+            .catch(() => {});
+        }, []);
+
+        const namespaces = Array.from(new Set(pods.map((pod) => pod.namespace))).sort();
+        const filteredPods = (namespace) => pods.filter((pod) => pod.namespace === namespace && (!filter || pod.name.includes(filter))).sort((a, b) => a.name.localeCompare(b.name));
+        const selected = pods.filter((pod) => pod.checked).sort((a, b) => a.name.localeCompare(b.name));
+
+        const handlePodSelection = (event) => {
+          setPods(
+            pods.map((pod) => {
+              if (pod.uid === event.target.dataset.uid) {
+                pod.checked = event.target.checked;
+              }
+              return pod;
+            })
+          );
+        };
+
+        return (
+          <main>
+            <table width="100%">
+              <tbody>
+                <tr>
+                  <td valign="top" nowrap="true">
+                    <fieldset>
+                      <legend>filter</legend>
+                      <input type="text" placeholder="name..." value={filter} onChange={(e) => setFilter(e.target.value)} />
+                    </fieldset>
+                    {namespaces.map((namespace) => (
+                      <fieldset key={namespace}>
+                        <legend>{namespace}</legend>
+                        {filteredPods(namespace).map((pod) => (
+                          <label key={pod.uid}>
+                            <input type="checkbox" checked={pod.checked} data-uid={pod.uid} onChange={handlePodSelection} /> {pod.name}
+                          </label>
+                        ))}
+                      </fieldset>
+                    ))}
+                  </td>
+                  <td valign="top" width="99%">
+                    {selected.map((pod) => (
+                      <Logs key={pod.uid} namespace={pod.namespace} name={pod.name} />
+                    ))}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </main>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(Lens));
+    </script>
+  </body>
+</html>
