@@ -136,3 +136,5 @@ Nice trick for an alias
 ```bash
 alias lens='(sleep 1; open http://localhost:8001/static/index.html &); kubectl proxy -w /Users/mac/github.com/mac2000/lens/'
 ```
+
+Or you can do something more cool like [this](https://www.reddit.com/r/kubernetes/comments/160r9po/comment/jxowaxp/?utm_source=share&utm_medium=web2x&context=3)
