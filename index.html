@@ -129,6 +129,11 @@
             .catch(() => {});
           return () => controller.abort();
         }, []);
+
+        React.useEffect(() => {
+          el.current.scrollTop = el.current.scrollHeight;
+        }, [logs]);
+
         return (
           <fieldset className="logs" ref={el}>
             <legend>{name}</legend>
