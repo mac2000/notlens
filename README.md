@@ -130,3 +130,9 @@ Things to improve:
 - clever log highlighter/printer
 
 > Note: did you know that for any kubectl command you may add `-v=8` to see what API calls are made under the hood, for example: `kubectl get po -A -v=8`
+
+Nice trick for an alias
+
+```bash
+alias lens='(sleep 1; open http://localhost:8001/static/index.html &); kubectl proxy -w /Users/mac/github.com/mac2000/lens/'
+```
