@@ -128,3 +128,5 @@ Things to improve:
 
 - get rid of react
 - clever log highlighter/printer
+
+> Note: did you know that for any kubectl command you may add `-v=8` to see what API calls are made under the hood, for example: `kubectl get po -A -v=8`
