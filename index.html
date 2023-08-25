@@ -39,6 +39,14 @@
         font-weight: normal;
       }
 
+      label.failed {
+        color: #b02b2c;
+      }
+
+      label.succeeded {
+        color: #6bba70;
+      }
+
       @media (prefers-color-scheme: light) {
         html {
           background-color: white;
@@ -161,10 +169,12 @@
                 const namespace = event.object.metadata.namespace;
                 const name = event.object.metadata.name;
                 const uid = event.object.metadata.uid;
+                const phase = event.object.status.phase;
                 const checked = false;
                 const controller = new AbortController();
                 if (type === "ADDED") {
-                  setPods((pods) => [...pods, { uid, namespace, name, checked, controller }]);
+                  window.pods = (window.pods || []).concat([event.object]);
+                  setPods((pods) => [...pods, { uid, namespace, name, phase, checked, controller }]);
                 } else if (event.type === "DELETED") {
                   setPods((pods) =>
                     pods.filter((pod) => {
@@ -215,7 +225,7 @@
                         <fieldset key={namespace}>
                           <legend>{namespace}</legend>
                           {filteredPods(namespace).map((pod) => (
-                            <label key={pod.uid}>
+                            <label key={pod.uid} className={(pod.phase || "unknown").toLowerCase()}>
                               <input type="checkbox" checked={pod.checked} data-uid={pod.uid} onChange={handlePodSelection} /> {pod.name}
                             </label>
                           ))}
