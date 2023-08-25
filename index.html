@@ -119,7 +119,8 @@
           .replace(/^(.+\s+msg="([^"]+)".*)$/g, "<b>$2</b> $1")
           .replace(/^(.+"[mM]essage":\s*"([^"]+)".+)$/g, "<b>$2</b> $1")
           .replace(/^(.+"msg":"([^"]+)".+)$/g, "<b>$2</b> $1")
-          .replace(/^([WEI]\d{4}\s+\d{2}:\d{2}:\d{2}\.\d+\s+\d+\s+[^:]+:\d+\]) (.+)$/g, "<b>$2</b> $1 $2");
+          .replace(/^([WEI]\d{4}\s+\d{2}:\d{2}:\d{2}\.\d+\s+\d+\s+[^:]+:\d+\]) (.+)$/g, "<b>$2</b> $1 $2")
+          .replace(/^(\[\d{2}:\d{2}:\d{2}\] \w+: (?:\w+\.)+\w+\[\d+\] (.+))$/g, "<b>$2</b> $1");
         if (highlighted.includes("<b>")) {
           return highlighted;
         } else {
